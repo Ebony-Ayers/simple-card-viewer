@@ -4,6 +4,7 @@ import os
 CARD_WIDTH = 260
 CARD_HEIGHT = 364
 MARGIN = 10
+SCROLL_SPEED = 15
 
 #global variables make pyglet much easier to use
 numCards = 0
@@ -14,6 +15,7 @@ cardPositions = []
 viewMode = 0
 selectedCard = None
 windowSize = (1280, 720)
+scrollOffset = 0
 
 #cache the images for each of the cards
 def loadCards():
@@ -35,7 +37,7 @@ def setPositions():
 	y = 0
 	maxX = (windowSize[0] - MARGIN) // (CARD_WIDTH + MARGIN)
 	for i in range(numCards):
-		cardPositions[i] = ((x * (CARD_WIDTH + MARGIN)) + MARGIN, windowSize[1] - ((y+1) * (CARD_HEIGHT + MARGIN)))
+		cardPositions[i] = ((x * (CARD_WIDTH + MARGIN)) + MARGIN, windowSize[1] - ((y+1) * (CARD_HEIGHT + MARGIN)) - scrollOffset)
 		x += 1
 		if x >= maxX:
 			x = 0
@@ -65,13 +67,19 @@ def initialisePyglet():
 		global windowSize
 		windowSize = (width, height)
 		setPositions()
+	@window.event
+	def on_mouse_scroll(x, y, scroll_x, scroll_y):
+		mouseScrollHandeler(x, y, scroll_x, scroll_y)
 	pyglet.app.run()
 
 #draw loop	
 def drawFunc():
 	global cardImages, cardPositions
 	for i,image in enumerate(cardImages):
-		image.blit(cardPositions[i][0], cardPositions[i][1])
+		x = cardPositions[i][0]
+		y = cardPositions[i][1]
+		if (-CARD_HEIGHT <= y) and (y <= windowSize[1]):
+			image.blit(x, y)
 
 def findClickedGardGrid(x,y):
 	global cardPositions, windowSize, viewMode, numcards
@@ -94,6 +102,12 @@ def mouseReleaseHandeler(x, y, button, modifiers):
 	pass
 def mouseDragHandeler(x, y, dx, dy, button, modifiers):
 	pass
+def mouseScrollHandeler(x, y, scroll_x, scroll_y):
+	global scrollOffset
+	
+	scrollOffset += SCROLL_SPEED * scroll_y
+	
+	setPositions()
 
 def main():
 	loadCards()
