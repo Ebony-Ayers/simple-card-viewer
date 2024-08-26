@@ -8,8 +8,12 @@ MARGIN = 10
 #global variables make pyglet much easier to use
 numCards = 0
 cardImages = []
-cardNameLookup = {}
+cardNames = []
 cardPositions = []
+#0 - grid
+viewMode = 0
+selectedCard = None
+windowSize = (1280, 720)
 
 #cache the images for each of the cards
 def loadCards():
@@ -21,14 +25,21 @@ def loadCards():
 			#reduce the size to be reasonable
 			cardImages[-1].width = CARD_WIDTH
 			cardImages[-1].height = CARD_HEIGHT
-			cardNameLookup[f[:-4]] = i
+			cardNames.append(f[:-4])
 			numCards += 1
 
 def setPositions():
-	global numCards, cardPositions
+	global numCards, cardPositions, windowSize
 	cardPositions = [None] * numCards
+	x = 0
+	y = 0
+	maxX = (windowSize[0] - MARGIN) // (CARD_WIDTH + MARGIN)
 	for i in range(numCards):
-		cardPositions[i] = (i * (CARD_WIDTH + MARGIN), 0)
+		cardPositions[i] = ((x * (CARD_WIDTH + MARGIN)) + MARGIN, windowSize[1] - ((y+1) * (CARD_HEIGHT + MARGIN)))
+		x += 1
+		if x >= maxX:
+			x = 0
+			y += 1
 	
 
 def initialisePyglet():
@@ -49,6 +60,11 @@ def initialisePyglet():
 	@window.event
 	def on_mouse_drag(x, y, dx, dy, buttons, modifiers):
 		mouseDragHandeler(x, y, dx, dy, buttons, modifiers)
+	@window.event
+	def on_resize(width, height):
+		global windowSize
+		windowSize = (width, height)
+		setPositions()
 	pyglet.app.run()
 
 #draw loop	
@@ -56,6 +72,20 @@ def drawFunc():
 	global cardImages, cardPositions
 	for i,image in enumerate(cardImages):
 		image.blit(cardPositions[i][0], cardPositions[i][1])
+
+def findClickedGardGrid(x,y):
+	global cardPositions, windowSize, viewMode, numcards
+	
+	if viewMode == 0:
+		numHorizontalCards = (windowSize[0] - MARGIN) // (CARD_WIDTH + MARGIN)
+		
+		cardX = (x - MARGIN) // (CARD_WIDTH + MARGIN)
+		cardY = (windowSize[1] - y) // (CARD_HEIGHT + MARGIN)
+		if cardX + (cardY * numHorizontalCards) > numCards:
+			return None
+		return (cardX, cardY)
+	else:
+		raise NotImplementedError
 
 #input handeling
 def mousePressHandeler(x, y, button, modifiers):
