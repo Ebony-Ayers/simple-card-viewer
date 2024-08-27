@@ -4,6 +4,7 @@ import os
 CARD_WIDTH = 260
 CARD_HEIGHT = 364
 MARGIN = 10
+#units are pixles per frame
 SCROLL_SPEED = 15
 
 #global variables make pyglet much easier to use
@@ -11,10 +12,12 @@ numCards = 0
 cardImages = []
 cardNames = []
 cardPositions = []
+#enum:
 #0 - grid
 viewMode = 0
 selectedCard = None
 windowSize = (1280, 720)
+#how many pixles to shift images as a result of scrolling
 scrollOffset = 0
 
 #cache the images for each of the cards
@@ -30,6 +33,7 @@ def loadCards():
 			cardNames.append(f[:-4])
 			numCards += 1
 
+#creeate a list of positions for the cards. The position stored is the bottom left corner.
 def setPositions():
 	global numCards, cardPositions, windowSize
 	cardPositions = [None] * numCards
@@ -43,7 +47,7 @@ def setPositions():
 			x = 0
 			y += 1
 	
-
+#pyglet boiler plate
 def initialisePyglet():
 	window = pyglet.window.Window(1280, 720, "Simple Card Viewer")
 	window.set_minimum_size(640,480)
@@ -78,18 +82,24 @@ def drawFunc():
 	for i,image in enumerate(cardImages):
 		x = cardPositions[i][0]
 		y = cardPositions[i][1]
+		#cull cards that are off screen
 		if (-CARD_HEIGHT <= y) and (y <= windowSize[1]):
 			image.blit(x, y)
 
+#find the card position in card space of the location the user clicked
 def findClickedGardGrid(x,y):
 	global cardPositions, windowSize, viewMode, numcards
 	
+	#when the cards are in a grid
 	if viewMode == 0:
+		#calculate how many cards fit across the screen
 		numHorizontalCards = (windowSize[0] - MARGIN) // (CARD_WIDTH + MARGIN)
 		
 		cardX = (x - MARGIN) // (CARD_WIDTH + MARGIN)
 		cardY = (windowSize[1] - y) // (CARD_HEIGHT + MARGIN)
-		if cardX + (cardY * numHorizontalCards) > numCards:
+		
+		#if the card is outside the range of posible cards return none
+		if (cardX + (cardY * numHorizontalCards) > numCards) or (cardX < 0) or (cardY < 0):
 			return None
 		return (cardX, cardY)
 	else:
@@ -104,9 +114,7 @@ def mouseDragHandeler(x, y, dx, dy, button, modifiers):
 	pass
 def mouseScrollHandeler(x, y, scroll_x, scroll_y):
 	global scrollOffset
-	
 	scrollOffset += SCROLL_SPEED * scroll_y
-	
 	setPositions()
 
 def main():
