@@ -4,6 +4,7 @@ from meta_data_input_handeler import *
 
 CARD_WIDTH = 372
 CARD_HEIGHT = 520
+DATA_BASE_FILE_NAME = "cardDB.txt"
 
 #global variables make pyglet much easier to use
 #for some reason pygrame needs to frames to draw an image so getnext=2 means get the next image get next=1 means wait a frame and get next=0 means wait for user input
@@ -41,34 +42,38 @@ def initialisePyglet():
 def drawFunc():
 	global getNext, currentImage, metaData
 	
-	#if we are set to get the next card get it and move to the draw step
-	if getNext == 2:
-		currentImage = getNextCard()
+	if getNext != -1:
+		#if we are set to get the next card get it and move to the draw step
+		if getNext == 2:
+			currentImage = getNextCard()
+			if currentImage != None:
+				currentImage.width = CARD_WIDTH
+				currentImage.height = CARD_HEIGHT
+				getNext = 1
+		
+		#draw the current card
+		if currentImage != None:
+			currentImage.blit(0, 0)
+		
+		#if we are set to get input get input then move to getting the next image
+		if getNext == 0:
+			createMetaData(metaData)
+			getNext = 2
+		
+		#if we have got the image wait a frame to draw it
+		if getNext == 1:
+			getNext = 0
+		
+		#when there are no more images to draw write the meta data to disk
 		if currentImage == None:
-			return
-		currentImage.width = CARD_WIDTH
-		currentImage.height = CARD_HEIGHT
-		getNext = 1
-	
-	#draw the current card
-	currentImage.blit(0, 0)
-	
-	#if we are set to get input get input then move to getting the next image
-	if getNext == 0:
-		createMetaData(metaData)
-		getNext = 2
-	
-	#if we have got the image wait a frame to draw it
-	if getNext == 1:
-		getNext = 0
-	
-	#when there are no more images to draw write the meta data to disk
-	if currentImage == None:
-		outputMetaData(metaData)
+			serialiseMetaData(metaData, DATA_BASE_FILE_NAME)
+			#stop the loop from doing anything
+			getNext = -1
 
 def main():
 	global cardGenerator
 	
+	deserialiseMetaData(metaData, DATA_BASE_FILE_NAME)
 	cardGenerator = getGenerator()	
 	
 	initialisePyglet()

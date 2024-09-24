@@ -1,4 +1,5 @@
 import enums
+import ast
 
 class Record:
 	def __init__(self):
@@ -14,6 +15,37 @@ class Record:
 		self.toughness = None
 		self.keywords = None
 		self.abilities = None
+	
+	def toStr(self):
+		t = (self.cardType,
+			 self.subType,
+			 self.legendary,
+			 self.trueCmc,
+			 self.lowestCmc,
+			 self.onCurve,
+			 self.maximumColor,
+			 self.minimumColors,
+			 self.power,
+			 self.toughness,
+			 self.keywords,
+			 self.abilities,)
+		return str(t)
+	
+	def fromStr(self, s):
+		t = ast.literal_eval(s)
+		self.cardType = t[0]
+		self.subType = t[1]
+		self.legendary = t[2]
+		self.trueCmc = t[3]
+		self.lowestCmc = t[4]
+		self.onCurve = t[5]
+		self.maximumColor = t[6]
+		self.minimumColors = t[7]
+		self.power = t[8]
+		self.toughness = t[9]
+		self.keywords = t[10]
+		self.abilities = t[11]
+
 
 def validateInt(message):
 	while True:
@@ -117,12 +149,15 @@ def createRecord():
 	#p/t
 	if record.cardType & enums.longTypes["creature"]:
 		record.power = validateInt("Enter the power")
-		record.toughness = validateInt("Enter the toughness: ")
+		record.toughness = validateInt("Enter the toughness")
 	else:
-		record.power = 0
-		record.toughness = 0
+		record.power = None
+		record.toughness = None
 	#keywords
-	record.keywords = validateMultiInputEnum("Enter the card keywords", True, enums.shortKeywords, enums.longKeywords)
+	if record.cardType & enums.longTypes["creature"]:
+		record.keywords = validateMultiInputEnum("Enter the card keywords", True, enums.shortKeywords, enums.longKeywords)
+	else:
+		record.keywords = None
 	#abilities
 	record.abilities = validateMultiInputEnum("Enter the card abilities", True, enums.longAbilities)
 	
@@ -130,14 +165,44 @@ def createRecord():
 	
 #metadata is a disctionary of records keyed by card name
 def createMetaData(metaData):
-	pass
+	print()
+	cardName = input("Enter the current cards name of blank to skip: ").strip()
+	shouldSkip = False
+	if cardName in metaData.keys():
+		shouldSkip = validateBool(f"\"{cardName}\" appears in the data base. would you like to skip")
+	if (cardName == "") or shouldSkip:
+		return
+	else:
+		record = createRecord()
+		metaData[cardName] = record
 
 def serialiseMetaData(metaData, fileName):
-	pass
+	with open(fileName, 'w') as f:
+		for key,value in metaData.items():
+			f.write(key + ":" + value.toStr() + "\n")
 
-def deserialiseMetaData(fileName):
-	pass
+def deserialiseMetaData(metaData, fileName):
+	with open(fileName, 'r') as f:
+		for line in f:
+			l = line.split(":")
+			record = Record()
+			record.fromStr(l[1])
+			metaData[l[0]] = record
 	
 if __name__ == "__main__":
 	print("You aren't supposed to run this file.")
-	createRecord()
+	print("Testing createRecord()")
+	
+	record = createRecord()
+	print("cardType =", record.cardType)
+	print("subType =", record.subType)
+	print("legendary =", record.legendary)
+	print("trueCmc =", record.trueCmc)
+	print("lowestCmc =", record.lowestCmc)
+	print("onCurve =", record.onCurve)
+	print("maximumColor =", record.maximumColor)
+	print("minimumColors =", record.minimumColors)
+	print("power =", record.power)
+	print("toughness =", record.toughness)
+	print("keywords =", record.keywords)
+	print("abilities =", record.abilities)
