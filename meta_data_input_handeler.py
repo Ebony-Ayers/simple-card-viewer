@@ -109,9 +109,17 @@ def createRecord():
 	#super type
 	record.cardType = validateSingleInputEnum("Enter the card type", False, enums.shortTypes, enums.longTypes)
 	#subtypes
-	record.subType = list(map(lambda s : s.lower().strip(), input("Enter the card subtypes: ").split(" ")))
+	if not ((record.cardType & enums.longTypes["instant"]) or (record.cardType & enums.longTypes["sorcery"]) or (record.cardType & enums.longTypes["planeswalker"])):
+		record.subType = list(map(lambda s : s.lower().strip(), input("Enter the card subtypes: ").split(" ")))
+		if record.subType == ['']:
+			record.subType = None
+	else:
+		record.subType = None
 	#legendary
-	record.legendary = validateBool("Is this card legendary")
+	if not ((record.cardType & enums.longTypes["instant"]) or (record.cardType & enums.longTypes["sorcery"]) or (record.cardType & enums.longTypes["planeswalker"])):
+		record.legendary = validateBool("Is this card legendary")
+	else:
+		record.legendary = False
 	#cmc
 	while True:
 		if not (record.cardType & enums.longTypes["land"]):
@@ -126,35 +134,41 @@ def createRecord():
 		else:
 			break
 	#curve
-	record.onCurve = validateBool("Is this card on curve")
+	if not (record.cardType & enums.longTypes["land"]):
+		record.onCurve = validateBool("Is this card on curve")
+	else:
+		record.onCurve = True
 	#maximum color
 	record.maximumColor = validateMultiInputEnum("Enter the maximum color", False, enums.shortColors, enums.longColors)
 	#minimum colors
-	if not (record.cardType & enums.longTypes["land"]):
-		record.minimumColors = []
-		while True:
-			minColor = validateMultiInputEnum("Enter a minimum color", False, enums.shortColors, enums.longColors)
-			#a and not b returns the bits in a that are not in b
-			#the minimum color must be a subset of the max color
-			if minColor & (~record.maximumColor):
-				print("\nInvalid input. The minimum color cannot be greater than the maximum color. Please try again.\n")
-				continue
-			record.minimumColors.append(minColor)
-			if not validateBool("Add another minimim color (y/n)"):
-				break
-		if record.maximumColor not in record.minimumColors:
-			record.minimumColors.append(record.maximumColor)
+	if validateBool("Enter minimum colors (y/n)"):
+		if not (record.cardType & enums.longTypes["land"]):
+			record.minimumColors = []
+			while True:
+				minColor = validateMultiInputEnum("Enter a minimum color", False, enums.shortColors, enums.longColors)
+				#a and not b returns the bits in a that are not in b
+				#the minimum color must be a subset of the max color or be colorless
+				if (minColor & (~record.maximumColor)) and (minColor != enums.longColors["colorless"]):
+					print("\nInvalid input. The minimum color cannot be greater than the maximum color. Please try again.\n")
+					continue
+				record.minimumColors.append(minColor)
+				if not validateBool("Add another minimim color (y/n)"):
+					break
+			if record.maximumColor not in record.minimumColors:
+				record.minimumColors.append(record.maximumColor)
+		else:
+			record.minimumColors = None
 	else:
-		record.minimumColors = None
+		record.minimumColors = [record.maximumColor]
 	#p/t
-	if record.cardType & enums.longTypes["creature"]:
+	if record.cardType & enums.longTypes["creature"] or (record.subType != None and "vehicle" in record.subType):
 		record.power = validateInt("Enter the power")
 		record.toughness = validateInt("Enter the toughness")
 	else:
 		record.power = None
 		record.toughness = None
 	#keywords
-	if record.cardType & enums.longTypes["creature"]:
+	if record.cardType & enums.longTypes["creature"] or (record.subType != None and "vehicle" in record.subType):
 		record.keywords = validateMultiInputEnum("Enter the card keywords", True, enums.shortKeywords, enums.longKeywords)
 	else:
 		record.keywords = None
@@ -164,12 +178,19 @@ def createRecord():
 	return record
 	
 #metadata is a disctionary of records keyed by card name
-def createMetaData(metaData):
+def createMetaData(metaData, cardName, shouldSkipExistingCards, modifySingleCard):
 	print()
-	cardName = input("Enter the current cards name of blank to skip: ").strip()
 	shouldSkip = False
+	#check if the card is already in the DB
 	if cardName in metaData.keys():
-		shouldSkip = validateBool(f"\"{cardName}\" appears in the data base. would you like to skip")
+		#check if command line arguments specify skipping behavior
+		if shouldSkipExistingCards:
+			shouldSkip = True
+		elif modifySingleCard:
+			shouldSkip = False
+		#fall back to asking user
+		else:
+			shouldSkip = validateBool(f"\"{cardName}\" appears in the data base. would you like to skip (y/n)")
 	if (cardName == "") or shouldSkip:
 		return
 	else:
