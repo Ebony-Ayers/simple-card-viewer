@@ -7,6 +7,7 @@ longTypes = {
 	"land"         : 32,
 	"planeswalker" : 64,
 	"sorcery"      : 128,
+	"unknown"      : 256,
 }
 shortTypes = {
 	"a" : 1,
@@ -25,6 +26,7 @@ longColors = {
 	"red"       : 8,
 	"green"     : 16,
 	"colorless" : 32,
+	"unknown"   : 64,
 }
 shortColors = {
 	"w" : 1,
