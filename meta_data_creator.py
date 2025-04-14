@@ -22,6 +22,7 @@ shouldMofigyExistingCards = False
 modifySingleCard = False
 modifySingleCardname = ""
 propertiesToModify = ["cardType", "subType", "legendary", "cmc", "color", "p/t", "keywords", "abilities", "rarity"]
+shouldDeleteOrphans = False
 isDebug = False
 
 #iterate the generator and catch the errors
@@ -91,7 +92,7 @@ def drawFunc(window):
 			window.close()
 
 def main():
-	global cardGenerator, metaData, shouldSkipExistingCards, shouldMofigyExistingCards, modifySingleCard, modifySingleCardname, propertiesToModify, isDebug
+	global cardGenerator, metaData, shouldSkipExistingCards, shouldMofigyExistingCards, modifySingleCard, modifySingleCardname, propertiesToModify, shouldDeleteOrphans, isDebug
 	
 	#command line arguments
 	for arg in sys.argv:
@@ -112,8 +113,26 @@ def main():
 					print(f"Error: property \"{p}\" not valid.")
 					return
 			propertiesToModify = properties
+		if arg == "--delete-orphans":
+			shouldDeleteOrphans = True
 		if arg == "--debug":
 			isDebug = True
+	
+	#delete orphans
+	if shouldDeleteOrphans:
+		files = os.listdir(os.path.join(os.getcwd(), CARDS_FOLDER_NAME))
+		temporyMetadata = ""
+		with open(DATA_BASE_FILE_NAME, 'r') as f:
+			for line in f:
+				cardName = line.strip().split(":")[0]
+				if cardName in files:
+					temporyMetadata += line
+				else:
+					print(f"Deleting orphaned record for \"{cardName}\"")
+		with open(DATA_BASE_FILE_NAME, 'w') as f:
+			#write everything except the final \n
+			f.write(temporyMetadata[:-1])
+		return
 	
 	#if present read in the existing meta data
 	if os.path.isfile(DATA_BASE_FILE_NAME):

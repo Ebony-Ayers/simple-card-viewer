@@ -6,4 +6,5 @@ A simple application to display images on screen and filter, organise, and sort 
 - `--modify-existing`: always modify existing enteries in the meta data db.
 - `--modify=<file name>`: searches for the card `file name` and modifies only that card.
 - `--propery=<property1, ...>`: only modify the listed properties. The options are `cardType`, `subType`, `legendary`, `cmc`, `color`, `p/t`, `keywords`, `abilities`, and `rarity`.
+- `--delete-orphans`: delete all enteries in the meta data db that don't correspond to a card image file. If this argument is specified all others are ingored.
 - `--debug`: display debugging information.
