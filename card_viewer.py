@@ -36,7 +36,7 @@ numCardsPerRow = 0
 scrollOffset = 0
 
 sortMode = "name"
-POSSIBLE_SORT_MODES = ["name", "cmc", "lcmc", "tcmc", "color", "power", "toughness"]
+POSSIBLE_SORT_MODES = ["name", "cmc", "lcmc", "tcmc", "color", "power", "toughness", "rarity"]
 
 DEFULAT_RECORD = Record()
 DEFULAT_RECORD.type = enums.longTypes["unknown"]
@@ -102,6 +102,8 @@ def filterSortCards():
 		filteredCardList.sort(key = lambda x : x.data.power if x.data.power != None else 999999)
 	elif sortMode == "toughness":
 		filteredCardList.sort(key = lambda x : x.data.toughness if x.data.toughness != None else 999999)
+	elif sortMode == "rarity":
+		filteredCardList.sort(key = lambda x : x.data.rarity)
 
 #creeate a list of positions for the cards. The position stored is the bottom left corner.
 def setPositions():

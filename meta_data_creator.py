@@ -11,13 +11,17 @@ CARDS_FOLDER_NAME = "cards/"
 #global variables make pyglet much easier to use
 #for some reason pygrame needs to frames to draw an image so getnext=2 means get the next image get next=1 means wait a frame and get next=0 means wait for user input
 getNext = 2
+#generator function to get the next card
 cardGenerator = None
 currentImage = None
 currentCardName = ""
 metaData = {}
+#command line arguments
 shouldSkipExistingCards = False
+shouldMofigyExistingCards = False
 modifySingleCard = False
 modifySingleCardname = ""
+propertiesToModify = ["cardType", "subType", "legendary", "cmc", "color", "p/t", "keywords", "abilities", "rarity"]
 isDebug = False
 
 #iterate the generator and catch the errors
@@ -55,7 +59,7 @@ def initialisePyglet():
 
 #draw loop	
 def drawFunc(window):
-	global getNext, currentImage, currentCardName, metaData, shouldSkipExistingCards, modifySingleCard, modifySingleCardname
+	global getNext, currentImage, currentCardName, metaData, shouldSkipExistingCards, shouldMofigyExistingCards, modifySingleCard, modifySingleCardname, propertiesToModify
 	
 	if getNext != -1:
 		#if we are set to get the next card get it and move to the draw step
@@ -73,7 +77,7 @@ def drawFunc(window):
 		
 		#if we are set to get input get input then move to getting the next image
 		if getNext == 0:
-			createMetaData(metaData, currentCardName, shouldSkipExistingCards, modifySingleCard)
+			createMetaData(metaData, currentCardName, shouldSkipExistingCards, shouldMofigyExistingCards, modifySingleCard, propertiesToModify)
 			getNext = 2
 		
 		#if we have got the image wait a frame to draw it
@@ -87,15 +91,27 @@ def drawFunc(window):
 			window.close()
 
 def main():
-	global cardGenerator, metaData, shouldSkipExistingCards, modifySingleCard, modifySingleCardname, isDebug
+	global cardGenerator, metaData, shouldSkipExistingCards, shouldMofigyExistingCards, modifySingleCard, modifySingleCardname, propertiesToModify, isDebug
 	
 	#command line arguments
 	for arg in sys.argv:
 		if arg == "--skip-existing":
 			shouldSkipExistingCards = True
+			shouldMofigyExistingCards = False
+		if arg == "--modify-existing":
+			shouldSkipExistingCards = False
+			shouldMofigyExistingCards = True
 		if arg.startswith("--modify="):
 			modifySingleCard = True
+			shouldMofigyExistingCards = True
 			modifySingleCardname = arg[9:].strip()
+		if arg.startswith("--property="):
+			properties = arg[11:].strip().split(" ")
+			for p in properties:
+				if p not in propertiesToModify:
+					print(f"Error: property \"{p}\" not valid.")
+					return
+			propertiesToModify = properties
 		if arg == "--debug":
 			isDebug = True
 	
